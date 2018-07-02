@@ -15,53 +15,80 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <hydroSHIELD.h>
+#include <hydroSHIELD.h> //include the library, this automatically includes OneWire and DallasTemperature. Be sure to install these libraries prior to running.
+#include <LiquidCrystal.h>
 
-hydroSHIELD hs;
-float tempC;
-int soilm_setpoint=1;// change the soil moisture setpoint to control how much water is pumped. This number is in percent (ie. pump when lower than 1%).
+
+hydroSHIELD hs; //create the instance
+float tempC; //variable for temperature in Celcius
+int soilm_setpoint = 1; // change the soil moisture setpoint to control how much water is pumped. This number is between 1-100 in percent  (ie. setpoint=1 means pump when lower than 1%)
+int time_s; //variable for keeping time in seconds
+int time_s_prev;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+boolean idle; //flag for idle state
+int powersave_threshold=10; //number of idle seconds before activating powersave mode
 
 void setup() {
-  // set up the LCD's number of columns and rows:
-  //lcd.begin(16, 4);
-  // Print a message to the LCD.
   //lcd.print("hello, world!");
-  pinMode(9,OUTPUT);
-  digitalWrite(9,HIGH);
-  hs.init();
+  hs.init(); //function to setup the hydroponic shield configuration
   delay(1000);
+  lcd.clear();
 }
 
 void loop() {
-  // set the cursor to column 0, line 1
-  // (note: line 1 is the second row, since counting begins with 0):
- //digitalWrite(8,HIGH);
-  //lcd.setCursor(0, 1);
-  // print the number of seconds since reset:
-  //lcd.print(millis() / 1000);
+  //----------------
+  //POWERSAVING MODE
+  //----------------
+  time_s = millis() / 1000; // seconds the program has been running
+  idle=true; //flag idle time begins
+  if(hs.getBUTTON_LEFT()==0||hs.getBUTTON_RIGHT()==0){ //if either button is pressed, begin power saving mode
+    powersave_mode(LOW); //begin power saving mode
+    idle=false; //reset idle time flag
+    time_s_prev=time_s; //save the time last idle flag was reset
+  }
+    if (time_s-time_s_prev>powersave_threshold){//time since last button activity is greater than the threshold
+  powersave_mode(HIGH);//turn powersave mode on
+  }
+  //-----------------
+  //Water Refill Mode
+  //-----------------
+  //incomplete
+  lcd.setCursor(0, 1);
   //delay(2500);
-  //digitalWrite(8,LOW);
   //delay(500);
   //digitalWrite(4,HIGH);
   //hs.setWATER(HIGH);
-  //tempC=hs.getTEMP();
-  //Serial.println(tempC);
-  hs.enableSENSOR(HIGH);
-  delay(1000);
+  //tempC = hs.getTEMP();
+  //hs.enableSENSOR(HIGH);
   //hs.setWATER(LOW);
   //digitalWrite(4,LOW);
-  boolean level=hs.getLEVEL();
-  Serial.println("water level is: "+String(level));
-  int soilm=hs.getSOILM();
-  if (soilm<1){
+  //boolean level = hs.getLEVEL();
+  //Serial.println("water level is: " + String(level));
+  int soilm = hs.getSOILM();
+  if (soilm < 1) {
     hs.pump(HIGH);
   }
-  else{
+  else {
     hs.pump(LOW);
   }
-  Serial.println(hs.getBUTTON_LEFT());
-  Serial.println(hs.getBUTTON_RIGHT());
-  Serial.println("PH is "+String(hs.getPH()));
-  hs.getTDS();
+  Serial.println("PH is " + String(hs.getPH()));
+  //hs.getTDS();
+}
+
+
+//-------------------
+//POWER SAVE FUNCTION
+//-------------------
+void powersave_mode(boolean state) {
+  if (state) {
+    hs.setLCDBACKLIGHT(LOW); //turn off the LCD screen backlight
+    lcd.noDisplay(); //turn off the LCD display but keep the info current
+    hs.enableSENSOR(LOW); //turn off the sensor enable pin (disables PH,TDS, and soil moisture sensors)
+  }
+  else {
+    hs.setLCDBACKLIGHT(HIGH); //turn on the backlight
+    lcd.display(); //turn on the display
+    //sensor enable is not turned on because a polling function will ensure it is turned on before reading values
+  }
 }
 
