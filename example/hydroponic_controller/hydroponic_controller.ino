@@ -21,53 +21,66 @@
 
 hydroSHIELD hs; //create the instance
 float tempC; //variable for temperature in Celcius
+float PH; //variable for PH
+float TDS; //variable for TDS
+int soilm; //variable for soilm (in %)
 int soilm_setpoint = 1; // change the soil moisture setpoint to control how much water is pumped. This number is between 1-100 in percent  (ie. setpoint=1 means pump when lower than 1%)
 int time_s; //variable for keeping time in seconds
-int time_s_prev;
+int time_s_prev;//variable for keeping time from last idle reset
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 boolean idle; //flag for idle state
-int powersave_threshold=10; //number of idle seconds before activating powersave mode
-int time_diff;
-int idle_threshold=1;
+int powersave_threshold = 10; //number of idle seconds before activating powersave mode
+int time_diff;//difference between time_s and time_s_prev
+int idle_threshold = 1; //how long to wait in seconds to read input from buttons
 
 void setup() {
-  //lcd.print("hello, world!");
+  lcd.begin(16,4);
   hs.init(); //function to setup the hydroponic shield configuration
   delay(1000);
   lcd.clear();
 }
 
 void loop() {
-  time_diff=time_s-time_s_prev;
+  time_diff = time_s - time_s_prev; //update the time difference
 
   //-----------------
   //Water Refill Mode
   //-----------------
-  if(hs.getBUTTON_RIGHT()==0&&idle==false&&time_diff>=idle_threshold){//if the right button is pressed while not idling
+  if (hs.getBUTTON_RIGHT() == 0 && idle == false && time_diff >= idle_threshold) { //if the right button is pressed while not idling
     lcd.print("filling...");//print the status on the screen
-    while(hs.getLEVEL()==0){//wait for level sensor to trigger
+    while (hs.getLEVEL() == 0) { //wait for level sensor to trigger
       hs.setWATER(HIGH);//energize solenoid
     }
     hs.setWATER(LOW);//de-energize solenoid after tank is full
     lcd.clear();//clear lcd
   }
+  //------------------
+  //POLL SENSORS
+  //------------------
+  if (hs.getBUTTON_LEFT() == 0 && idle == false && time_diff >= idle_threshold) {
+  lcd.print("Polling Sensors..Please Wait..");
+  tempC=hs.getTEMP();
+  PH=hs.getPH();
+  TDS=hs.getTDS();
+  soilm=hs.getSOILM();
+  }
   //----------------
   //POWERSAVING MODE
   //----------------
   time_s = millis() / 1000; // seconds the program has been running
-  if (time_diff>powersave_threshold){//time since last button activity is greater than the threshold
-  powersave_mode(HIGH);//turn powersave mode on
-  idle=true;
+  if (time_diff > powersave_threshold) { //time since last button activity is greater than the threshold
+    powersave_mode(HIGH);//turn powersave mode on
+    idle = true; //idle flag set
   }
-  if(hs.getBUTTON_LEFT()==0||hs.getBUTTON_RIGHT()==0){ //if either button is pressed, turn off power saving mode
+  if (hs.getBUTTON_LEFT() == 0 || hs.getBUTTON_RIGHT() == 0) { //if either button is pressed, turn off power saving mode
     powersave_mode(LOW); //turn off power saving mode
-    idle=false; //reset idle time flag
-    if(time_diff>powersave_threshold){
-    time_s_prev=time_s; //save the time last idle flag was reset
+    idle = false; //reset idle time flag
+    if (time_diff > powersave_threshold) {
+      time_s_prev = time_s; //save the time last idle flag was reset
     }
   }
   //------------------
-  lcd.setCursor(0, 1);
+  lcd.setCursor(0, 0);
   //delay(2500);
   //delay(500);
   //digitalWrite(4,HIGH);
@@ -78,15 +91,12 @@ void loop() {
   //digitalWrite(4,LOW);
   //boolean level = hs.getLEVEL();
   //Serial.println("water level is: " + String(level));
-  int soilm = hs.getSOILM();
   if (soilm < 1) {
     hs.pump(HIGH);
   }
   else {
     hs.pump(LOW);
   }
-  Serial.println("PH is " + String(hs.getPH()));
-  //hs.getTDS();
 }
 
 
