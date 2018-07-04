@@ -27,6 +27,8 @@ int time_s_prev;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 boolean idle; //flag for idle state
 int powersave_threshold=10; //number of idle seconds before activating powersave mode
+int time_diff;
+int idle_threshold=1;
 
 void setup() {
   //lcd.print("hello, world!");
@@ -36,23 +38,35 @@ void setup() {
 }
 
 void loop() {
+  time_diff=time_s-time_s_prev;
+
+  //-----------------
+  //Water Refill Mode
+  //-----------------
+  if(hs.getBUTTON_RIGHT()==0&&idle==false&&time_diff>=idle_threshold){//if the right button is pressed while not idling
+    lcd.print("filling...");//print the status on the screen
+    while(hs.getLEVEL()==0){//wait for level sensor to trigger
+      hs.setWATER(HIGH);//energize solenoid
+    }
+    hs.setWATER(LOW);//de-energize solenoid after tank is full
+    lcd.clear();//clear lcd
+  }
   //----------------
   //POWERSAVING MODE
   //----------------
   time_s = millis() / 1000; // seconds the program has been running
-  idle=true; //flag idle time begins
-  if(hs.getBUTTON_LEFT()==0||hs.getBUTTON_RIGHT()==0){ //if either button is pressed, begin power saving mode
-    powersave_mode(LOW); //begin power saving mode
-    idle=false; //reset idle time flag
-    time_s_prev=time_s; //save the time last idle flag was reset
-  }
-    if (time_s-time_s_prev>powersave_threshold){//time since last button activity is greater than the threshold
+  if (time_diff>powersave_threshold){//time since last button activity is greater than the threshold
   powersave_mode(HIGH);//turn powersave mode on
+  idle=true;
   }
-  //-----------------
-  //Water Refill Mode
-  //-----------------
-  //incomplete
+  if(hs.getBUTTON_LEFT()==0||hs.getBUTTON_RIGHT()==0){ //if either button is pressed, turn off power saving mode
+    powersave_mode(LOW); //turn off power saving mode
+    idle=false; //reset idle time flag
+    if(time_diff>powersave_threshold){
+    time_s_prev=time_s; //save the time last idle flag was reset
+    }
+  }
+  //------------------
   lcd.setCursor(0, 1);
   //delay(2500);
   //delay(500);

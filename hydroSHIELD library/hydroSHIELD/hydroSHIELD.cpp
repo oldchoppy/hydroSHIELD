@@ -1,20 +1,3 @@
-/*  hydroSHIELD source code
-    Copyright (C) 2018  David Stanger
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
 #include <Arduino.h>
 #include <hydroSHIELD.h>
 #include <OneWire.h>
@@ -24,8 +7,6 @@
 OneWire oneWire(temp_pin); //onewire setup instance
 DallasTemperature sensors(&oneWire); //pass one Wire reference to DallasTemperature library
 DeviceAddress insideThermometer; //array for device address
-//Setup LCD
-LiquidCrystal lcd(rs,en,d4,d5,d6,d7);
 
 //Global Variables
 //----------------
@@ -35,7 +16,8 @@ int counter;
 //Initialize the shield
 //---------------------
 void hydroSHIELD::init(){
-	Serial.begin(9600); //begin serial connection
+LiquidCrystal lcd(rs,en,d4,d5,d6,d7);
+Serial.begin(9600); //begin serial connection
 	//--------------------------
 	//Temp Sensor Initialization
 	//--------------------------
@@ -98,6 +80,8 @@ void hydroSHIELD::init(){
 	lcd.write(byte(0)); //draw icon 1/3
 	lcd.write(byte(2)); //draw icon 2/3
 	lcd.write(byte(1)); //draw icon 3/3
+	pinMode(L_pin,OUTPUT); //configure the LCD screen backlight
+     setLCDBACKLIGHT(HIGH); //turn on LCD screen backlight
 	//-----------------------------
 	//Water Solenoid Initialization
 	//-----------------------------
@@ -105,8 +89,7 @@ void hydroSHIELD::init(){
 	//----------------------
 	//Sensor Enable PIN Init
 	//----------------------
-	pinMode(sensor_e,OUTPUT);
-	digitalWrite(sensor_e,LOW);
+	enableSENSOR(HIGH);
 	//----------------------
 	//Panel Buttons Init
 	//----------------------
@@ -274,11 +257,19 @@ float bTemp=analogRead(TDS_pin);
       float compensationCoefficient=1.0+0.02*(temperature-25.0);    //temperature compensation formula: fFinalResult(25^C) = fFinalResult(current)/(1.0+0.02*(fTP-25.0));
       float compensationVolatge=averageVoltage/compensationCoefficient;  //temperature compensation
       tdsValue=(133.42*compensationVolatge*compensationVolatge*compensationVolatge - 255.86*compensationVolatge*compensationVolatge + 857.39*compensationVolatge)*0.5; //convert voltage value to tds value
-      Serial.print("voltage:");
-      Serial.print(averageVoltage,2);
-      Serial.print("V   ");
+      //Serial.print("voltage:");
+      //Serial.print(averageVoltage,2);
+      //Serial.print("V   ");
       Serial.print("TDS Value:");
       Serial.print(tdsValue,0);
       Serial.println("ppm");
 }
-
+//------------------------------
+//LCD BACKLIGHT FUNCTION
+//------------------------------
+void hydroSHIELD::setLCDBACKLIGHT(boolean state){
+	if (state)
+	digitalWrite(L_pin,HIGH);
+	else
+	digitalWrite(L_pin,LOW);
+}
