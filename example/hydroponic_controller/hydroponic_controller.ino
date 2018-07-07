@@ -32,6 +32,9 @@ boolean idle; //flag for idle state
 int powersave_threshold = 10; //number of idle seconds before activating powersave mode
 int time_diff;//difference between time_s and time_s_prev
 int idle_threshold = 1; //how long to wait in seconds to read input from buttons
+int time_s_prev_poll; //variable for keeping time at sensor poll
+int time_diff_poll;// variable for keeping time difference since last sensor poll
+int poll_threshold=2;//number of seconds between polling sensors
 
 void setup() {
   lcd.begin(16,4);
@@ -57,7 +60,12 @@ void loop() {
   //------------------
   //POLL SENSORS
   //------------------
-  if (hs.getBUTTON_LEFT() == 0 && idle == false && time_diff >= idle_threshold) {
+  time_diff_poll=time_s-time_s_prev_poll;
+  if(time_diff_poll>poll_threshold){
+    getSENSORS();
+    time_s_prev_poll=time_s;
+  }
+  if (hs.getBUTTON_LEFT() == 0 && idle == false && time_diff >= idle_threshold) {//manually poll sensors using left button
   getSENSORS();
   //idle=false; //set idle flag
   }
@@ -95,12 +103,14 @@ void loop() {
 //getSENSORS FUNCTION
 //-------------------
 void getSENSORS(){
-  lcd.print("Polling Sensors");
+  lcd.print("Polling Sensors"); //print
   hs.enableSENSOR(HIGH);
   tempC=hs.getTEMP();
   PH=hs.getPH();
   TDS=hs.getTDS();
   soilm=hs.getSOILM();
+  lcd.clear();
+  hs.enableSENSOR(LOW);
 }
 //-------------------
 //POWER SAVE FUNCTION
