@@ -89,6 +89,7 @@ Serial.begin(9600); //begin serial connection
 	//----------------------
 	//Sensor Enable PIN Init
 	//----------------------
+	pinMode(sensor_e,OUTPUT);
 	enableSENSOR(HIGH);
 	//----------------------
 	//Panel Buttons Init
@@ -219,7 +220,8 @@ unsigned long int avgValue;
   }
   float phValue=(float)avgValue*5.0/1024/6; //convert the analog into millivolt
   phValue=3.5*phValue;                      //convert the millivolt into pH value
-  return phValue; 
+Serial.println("PH is "+String(phValue));  
+return phValue; 
 }
 //----------------------------
 //TDS METER FUNCTIONS

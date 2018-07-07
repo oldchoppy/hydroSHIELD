@@ -42,7 +42,6 @@ void setup() {
 
 void loop() {
   time_diff = time_s - time_s_prev; //update the time difference
-
   //-----------------
   //Water Refill Mode
   //-----------------
@@ -53,16 +52,14 @@ void loop() {
     }
     hs.setWATER(LOW);//de-energize solenoid after tank is full
     lcd.clear();//clear lcd
+    //idle=false; //set idle flag
   }
   //------------------
   //POLL SENSORS
   //------------------
   if (hs.getBUTTON_LEFT() == 0 && idle == false && time_diff >= idle_threshold) {
-  lcd.print("Polling Sensors..Please Wait..");
-  tempC=hs.getTEMP();
-  PH=hs.getPH();
-  TDS=hs.getTDS();
-  soilm=hs.getSOILM();
+  getSENSORS();
+  //idle=false; //set idle flag
   }
   //----------------
   //POWERSAVING MODE
@@ -91,15 +88,20 @@ void loop() {
   //digitalWrite(4,LOW);
   //boolean level = hs.getLEVEL();
   //Serial.println("water level is: " + String(level));
-  if (soilm < 1) {
-    hs.pump(HIGH);
-  }
-  else {
-    hs.pump(LOW);
-  }
+
 }
 
-
+//-------------------
+//getSENSORS FUNCTION
+//-------------------
+void getSENSORS(){
+  lcd.print("Polling Sensors");
+  hs.enableSENSOR(HIGH);
+  tempC=hs.getTEMP();
+  PH=hs.getPH();
+  TDS=hs.getTDS();
+  soilm=hs.getSOILM();
+}
 //-------------------
 //POWER SAVE FUNCTION
 //-------------------
@@ -115,4 +117,6 @@ void powersave_mode(boolean state) {
     //sensor enable is not turned on because a polling function will ensure it is turned on before reading values
   }
 }
+
+
 
