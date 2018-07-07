@@ -63,6 +63,12 @@ void loop() {
   time_diff_poll=time_s-time_s_prev_poll;// difference between current time and the last sensor poll
   if(time_diff_poll>poll_threshold){//if poll time difference is more than the threshold, poll sensors)
     getSENSORS();
+    lcd.setCursor(0,0);
+    lcd.print(String(int(tempC*1.8+32))+"F");
+    lcd.setCursor(8,0);
+    lcd.print("pH "+String(PH));
+    lcd.setCursor(0,1);
+    lcd.print(String(int(TDS))+"ppm");
     time_s_prev_poll=time_s;//set the prevoius poll time to the current time
   }
   if (hs.getBUTTON_LEFT() == 0 && idle == false && time_diff >= idle_threshold) {//manually poll sensors using left button
@@ -84,8 +90,7 @@ void loop() {
       time_s_prev = time_s; //save the time last idle flag was reset
     }
   }
-  //------------------
-  lcd.setCursor(0, 0);
+  //-----------------
   //delay(2500);
   //delay(500);
   //digitalWrite(4,HIGH);
@@ -103,6 +108,7 @@ void loop() {
 //getSENSORS FUNCTION
 //-------------------
 void getSENSORS(){
+  lcd.clear();
   lcd.print("Polling Sensors"); //print
   hs.enableSENSOR(HIGH);
   tempC=hs.getTEMP();

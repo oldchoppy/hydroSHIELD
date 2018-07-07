@@ -265,6 +265,7 @@ float bTemp=analogRead(TDS_pin);
       Serial.print("TDS Value:");
       Serial.print(tdsValue,0);
       Serial.println("ppm");
+return tdsValue;
 }
 //------------------------------
 //LCD BACKLIGHT FUNCTION
