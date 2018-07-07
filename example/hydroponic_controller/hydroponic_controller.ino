@@ -60,10 +60,10 @@ void loop() {
   //------------------
   //POLL SENSORS
   //------------------
-  time_diff_poll=time_s-time_s_prev_poll;
-  if(time_diff_poll>poll_threshold){
+  time_diff_poll=time_s-time_s_prev_poll;// difference between current time and the last sensor poll
+  if(time_diff_poll>poll_threshold){//if poll time difference is more than the threshold, poll sensors)
     getSENSORS();
-    time_s_prev_poll=time_s;
+    time_s_prev_poll=time_s;//set the prevoius poll time to the current time
   }
   if (hs.getBUTTON_LEFT() == 0 && idle == false && time_diff >= idle_threshold) {//manually poll sensors using left button
   getSENSORS();
